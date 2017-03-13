@@ -1,0 +1,308 @@
+@import url('https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css');
+@import url('https://fonts.googleapis.com/css?family=Roboto|Leckerli+One|Questrial');
+
+// Mixins
+
+@mixin center {
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+$threshold: 600px;
+@mixin responsive($property, $small, $large) {
+  @media screen and ( max-width: $threshold ) {
+    #{$property}: $small;
+  }
+  @media screen and ( min-width: $threshold ) {
+    #{$property}: $large;
+  }
+}
+
+@mixin transition($property, $time) {
+  transition: $property $time;
+  -webkit-transition: $property $time;
+  -moz-transition: $property $time;
+  -o-transition: $property $time;
+}
+
+@mixin no-select {
+  -webkit-user-select: none;  /* Chrome all / Safari all */
+  -moz-user-select: none;     /* Firefox all */
+  -ms-user-select: none;      /* IE 10+ */
+  user-select: none;          /* Likely future */      
+}
+
+// CSS for raw html
+
+body {
+  font-family: Roboto;
+  background: rgb(121, 194, 246);
+  overflow: hidden;
+}
+#root {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+}
+
+// CSS for React components
+
+.full-screen-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  z-index: 1;
+  overflow-y: scroll;
+}
+
+.center-text {
+  position: relative;
+  width: 100%;
+  left: 0px;
+  text-align: center;
+}
+
+.btn {
+  margin: 5px;
+  padding: 10px;
+  border: { style: solid;
+            width: 1px;
+            color: fade-out(black, 0.8);
+            radius: 8px; };
+  @include no-select;
+  outline: none;
+  cursor: pointer;
+  @include responsive(font-size, 1em, 1.2em);
+}
+.btn:active {
+  box-shadow: inset 3px 3px 2px fade-out(black, 0.9);
+}
+
+.recipes-container {
+  position: relative;
+  @include center;
+  @include responsive(width, 280px, 500px);
+  padding: 15px 15px 40px 15px;
+  background: #fff;
+  top: 50px;
+  border: { style: solid;
+            width: 1px;
+            color: fade-out(red, 0.9);
+            radius: 15px; };
+  margin-bottom: 80px;
+}
+
+.recipes-title {
+  @include responsive(font-size, 3em, 4em);
+  @include responsive(padding-bottom, 10px, 20px);
+  font-family: Leckerli One;
+  color: rgb(234, 117, 63);
+  text-shadow: 2px 2px 0px fade-out(black, 0.9);
+  cursor: default;
+  @include no-select;
+}
+
+.recipe-container {
+  @include center;
+  @include responsive(margin-top, 5px, 10px);
+  width: 90%;
+  border-width: 5px;
+  border: { style: solid;
+            color: fade-out(black, 0.9);
+            width: 1px;
+            radius: 10px; };
+  background: rgba(199, 247, 249, 0.7);
+  color: rgb(100, 123, 125);
+}
+.recipe-name {
+  @include responsive(padding, 5px, 10px);
+  @include responsive(font-size, 1em, 1.25em);
+  cursor: pointer;
+  @include no-select;
+  margin: 5px;
+}
+
+.recipe-hidden {
+  display: none;
+  max-height: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+.recipe-visible {
+  max-height: 1000px;
+  padding: 5px;
+  border: none;
+  overflow: auto;
+};
+.recipe {
+  display: block;
+  background: fade-out(#fff, 0.3);
+  border-radius: 0px 0px 10px 10px;
+  box-shadow: inset 0px 2px 0px fade-out(black, 0.9);
+  @include transition(max-height, 0.75s);
+}
+
+.ingredient {
+  padding: 0px 5px 2px 2px;
+  margin-left: -10px;
+}
+
+.recipe-btns-container {
+  padding: 10px;
+}
+
+.edit-btn {
+  background: #fff;
+  color: rgb(188, 89, 13);
+}
+.delete-btn {
+  background: rgb(234, 164, 152);
+  color: rgb(147, 43, 25);
+}
+
+.new-recipe-btn {
+  position: relative;
+  left: 5%;
+  margin-top: 20px;
+  background: rgb(190, 255, 214);
+  color: rgb(38, 112, 64);
+}
+
+.editor-bg-hidden {
+  z-index: -1;
+  opacity: 0;
+  background: fade-out(black, 0.5);
+}
+.editor-bg {
+  z-index: 2;
+  background: fade-out(black, 0.3);
+  opacity: 1;
+  @include transition(opacity, 0.5s);
+}
+
+.editor-container-hidden {
+  margin-top: 0px;
+}
+.editor-container {
+  margin-top: 40px;
+  @include transition(margin-top, 0.5s);
+  padding: 10px 5px 20px 0px;
+  background: #fff;
+  @include responsive(width, 250px, 400px);
+  @include center;
+  border: { style: solid;
+            width: 1px;
+            color: fade-out(black, 0.8);
+            radius: 15px; };
+  margin-bottom: 100px;
+}
+
+.exit-btn-container {
+  text-align: right;
+  width: 95%;
+  @include center;
+  @include no-select;
+}
+.exit-btn-icon {
+  cursor: pointer;
+  @include responsive(font-size, 1.5em, 2em);
+  color: rgb(206, 93, 61);
+}
+
+.editor-title {
+  color: rgb(35, 149, 198);
+  font-family: Leckerli One;
+  @include responsive(font-size, 2em, 3em);
+  top: -10px;
+  cursor: default;
+  @include no-select;
+  text-shadow: 2px 2px 0px fade-out(black, 0.9);
+}
+
+.editor-section-title {
+  width: 85%;
+  @include center;
+  color: rgb(100, 133, 165);
+  padding-bottom: 5px;
+  @include responsive(font-size, 1em, 1.25em);
+}
+
+.name-input-container {
+  width: 70%;
+  @include center;
+}
+.name-input, .name-input:focus {
+  width: 100%;
+  background: none;
+  outline: none;
+  border: none;
+  border: { bottom: solid;
+            width: 2px;
+            color: rgba(100, 133, 165, 0.5); };
+  padding: 5px;
+  @include responsive(font-size, 1em, 1.25em);
+  margin-bottom: 20px;
+}
+
+.editor-ingredient {
+  width: 80%;
+  @include center;
+  padding: 5px;
+}
+.delete-icon {
+  font-size: 1.25em;
+  color: rgb(191, 87, 59);
+  cursor: pointer;
+}
+.editor-ingredient-text {
+  position: relative;
+  display: block;
+  width: 90%;
+  left: 10%;
+  top: -1.25em;
+  margin-bottom: -1em;
+}
+
+.add-ingredient-container {
+  padding-top: 5px;
+  width: 80%;
+  @include center;
+}
+.add-icon {
+  font-size: 1.25em;
+  margin-right: 5px;
+  color: rgb(67, 168, 70);
+  cursor: pointer;
+}
+.add-ingredient-input, .add-ingredient-input:focus {
+  @include responsive(width, 82%, 90%);
+  border: none;
+  border: { bottom: solid;
+            width: 2px;
+            color: rgba(100, 133, 165, 0.5); };
+  outline: none;
+  padding: 5px;
+  @include responsive(font-size, 1em, 1.25em);
+}
+
+.save-recipe-btn {
+  background: rgb(190, 255, 214);
+  color: rgb(38, 112, 64);
+  margin-top: 20px;
+  margin-left: 20px;
+}
+.save-recipe-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.signature {
+  font-family: Questrial;
+  color: rgba(07, 134, 166, 0.8);
+  margin-bottom: 100px;
+}

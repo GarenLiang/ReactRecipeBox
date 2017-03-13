@@ -1,0 +1,378 @@
+// Initial state
+
+const initialState = {
+  visibleRecipes: [],
+  openRecipe: null,
+  recipes: [
+    {
+      name: 'Cheese Cake',
+      ingredients: [ '15 graham crackers crushed',
+                     '2 tablespoons butter, melted',
+                     '4 (8 ounce) packages cream cheese',
+                     '1 1/2 cups white sugar',
+                     '3/4 cups milk',
+                     '4 eggs',
+                     '1 cup sour cream',
+                     '1 tablespoon vanilla extract',
+                     '1/4 cup all purpose-flour' ]
+    },
+    {
+      name: 'Pizza Dough',
+      ingredients: [ '1 (25 ounce) envelope active dry yeast',
+                     '1 cup lukewarm water',
+                     '3 cups all-purpose flour',
+                     '1/4 teaspoon salt',
+                     '2 tablespoons shortening' ]
+    },
+    {
+      name: 'Pizza Sauce',
+      ingredients: [ '1 tablespoon vegetable oil',
+                     '1/2 cup chopped onion',
+                     '1 (6 ounce) can tomato paste',
+                     '6 fluid ounces water',
+                     '1/2 teaspoon white sugar',
+                     '1 teaspoon salt',
+                     '1/8 teaspoon ground black pepper',
+                     '1/4 teaspoon garlic powder',
+                     '1/4 teaspoon dried basil',
+                     '1/2 teaspoon dried oregano',
+                     '1/4 teaspoon dried marjoram',
+                     '1/4 teaspoon dried cumin',
+                     '1/4 teaspoon chili powder',
+                     '1/8 teaspoon crushed red pepper flakes' ]
+    }
+  ]
+}
+
+// Load and save state to local storage
+// IMPELEMENT THIS INOT APP LAST
+
+const loadState = () => {
+  try {
+    const serializedState = localStorage.getItem('state');
+    if( serializedState === null )
+      return undefined
+    else
+      return JSON.parse(serializedState);
+  }
+  catch(err) {
+    console.log('Failed to load the state from local storage.');
+    console.error(err);
+    return undefined;
+  }
+}
+
+const saveState = (state) => {
+  try {
+    const serializedState = JSON.stringify(state);
+    localStorage.setItem('state', serializedState);
+  }
+  catch(err) {
+    console.log('Failed to save the state to local storage.')
+    console.error(err);
+  }
+}
+
+// Action creators sorted by reducer
+
+const toggleRecipeVisibility = (recipe) => ({ type: 'TOGGLE_RECIPE',
+                                              recipe });
+const removeVisibility = (name) => ({ type: 'REMOVE_VISIBILITY', name });
+
+
+const openNewRecipe = () => ({ type: 'OPEN_NEW_RECIPE' });
+const openRecipeForEdit = (recipe) => ({ type: 'OPEN_RECIPE_FOR_EDIT',
+                                         recipe });
+const editName = (name) => ({ type: 'EDIT_NAME',
+                              name });
+const editIngredient = (ingredient) => ({ type: 'EDIT_INGREDIENT',
+                                          ingredient });
+const addIngredient = () => ({ type: 'ADD_INGREDIENT' });
+const deleteIngredient = (index) => ({ type: 'DELETE_INGREDIENT',
+                                       index });
+const closeEditWindow = () => ({ type: 'CLOSE_EDIT_WINDOW' });
+
+
+const saveRecipe = (recipe) => ({ type: 'SAVE_RECIPE',
+                                  recipe });
+const deleteRecipe = (index) => ({ type: 'DELETE_RECIPE',
+                                   index });
+
+// Reducers
+
+const visibleRecipes = (state=[], action) => {
+  let index;
+  switch(action.type) {
+    case 'TOGGLE_RECIPE':
+      index = state.indexOf(action.recipe.name);
+      if( index === -1 )
+        state.push(action.recipe.name)
+      else state.splice(index, 1);
+      return state;
+    case 'REMOVE_VISIBILITY':
+      index = state.indexOf(action.name);
+      if( index !== -1 ) state.splice(index, 1);
+      return state;
+    default:
+      return state;
+  }
+}
+
+const openRecipe = (state=null, action) => {
+  switch(action.type) {
+    case 'OPEN_NEW_RECIPE':
+      return { name: '',  ingredients: [], newIngredient: '' };
+    case 'OPEN_RECIPE_FOR_EDIT':
+      return { name:        '' + action.recipe.name,
+               ingredients: [].concat(action.recipe.ingredients),
+               newIngredient: '' };
+    case 'EDIT_NAME':
+      return Object.assign({}, state, {
+        name: action.name
+      });
+    case 'ADD_INGREDIENT':
+      if(state.newIngredient !== "") state.ingredients.push(state.newIngredient);
+      return Object.assign({}, state, { newIngredient: '' });
+    case 'EDIT_INGREDIENT':
+      return Object.assign({}, state, {
+        newIngredient: action.ingredient
+      });
+    case 'DELETE_INGREDIENT':
+      state.ingredients.splice(action.index, 1);
+      return state;
+    case 'CLOSE_EDIT_WINDOW':
+      return null;
+    default:
+      return state;
+  }
+}
+
+const recipes = (state=initialState.recipes, action) => {
+  let index;
+  switch(action.type) {
+    case 'SAVE_RECIPE':
+     let names = state.map((recipe) => recipe.name);
+      index = names.indexOf(action.recipe.name);
+      if( index === -1 ) {
+        state.push(action.recipe);
+        return state;
+      }
+      else {
+        state[index] = action.recipe;
+        return state;
+      }
+    case 'DELETE_RECIPE':
+      state.splice(action.index, 1);
+      return state;
+    default:
+      return state;
+  }
+}
+
+const rootReducer = Redux.combineReducers({ visibleRecipes,
+                                            openRecipe,
+                                            recipes });
+
+// Store
+const store = Redux.createStore(rootReducer, loadState());
+
+let then = Date.now();
+
+store.subscribe(() => {
+  console.log(store.getState());
+  renderApp();
+              
+  saveState({ recipes: store.getState().recipes });
+})
+
+// React components
+
+// Presentational
+
+const Recipe = ({ index, visibleRecipes, recipe,
+                  toggle, openRecipe,
+                  deleteRecipe, removeVisibility }) => {
+  
+        let visibility;
+        let element;
+        if(visibleRecipes.indexOf(recipe.name) !== -1) {
+          visibility = 'recipe-visible';
+          element = (<i className="fa fa-angle-down" />);
+        }
+        else {
+          visibility = 'recipe-hidden';
+          element = (<i className="fa fa-angle-right" />);
+        }
+  
+        return (
+          <div className="recipe-container">
+            <div className="recipe-name"
+                 onClick={ev => { ev.preventDefault(); toggle(recipe) }}>
+              {element}{' ' + recipe.name}
+            </div>
+            <div className={'recipe ' + visibility}>
+              <ul>
+              {recipe.ingredients.map((ingredient) => (
+                <li className="ingredient">{ingredient}</li>
+              ))}
+              </ul>
+              <div className="recipe-btns-container">
+                <button className="btn edit-btn"
+                        onClick={ev => { ev.preventDefault(); openRecipe(recipe); }}>
+                  <i className="fa fa-pencil-square-o"/>{' Edit'}</button>
+                <button className="btn delete-btn"
+                        onClick={ev => { ev.preventDefault();
+                                         deleteRecipe(index);
+                                         removeVisibility(recipe.name); }}>
+                  <i className="fa fa-trash-o" />{' Delete'}
+                  </button>
+              </div>
+            </div>
+          </div>
+        )
+}
+
+const Recipes = ({ visibleRecipes, recipes,
+                   toggle, openRecipe,
+                   deleteRecipe, openNewRecipe, removeVisibility }) => (
+  <div classname="full-screen-container">
+    <div className="recipes-container">
+      <div className="recipes-title center-text">
+        {'Recipes'}
+      </div>
+      {recipes.map((recipe, index) => {
+        return (
+          <Recipe index={index}
+                  visibleRecipes={visibleRecipes}
+                  recipe={recipe}
+                  toggle={toggle}
+                  openRecipe={openRecipe}
+                  deleteRecipe={deleteRecipe}
+                  removeVisibility={removeVisibility} />
+        );
+      })}
+      <button className="btn new-recipe-btn"
+              onClick={ev => { ev.preventDefault(); openNewRecipe(); }}>
+        <i className="fa fa-plus" />{' Add New Recipe'}
+      </button>
+    </div>
+  </div>
+);
+
+const Ingredient = ({ index, ingredient, deleteIngredient }) => (
+  <div className="ingredient-container">
+    <div className="editor-ingredient">
+      <i className="fa fa-times delete-icon"
+         onClick={ev => { ev.preventDefault(); deleteIngredient(index)}} />
+      <div className="editor-ingredient-text">{' ' + ingredient}</div>
+    </div>
+  </div>
+);
+
+const Editor = ({ openRecipe, closeWindow, editName,
+                  addIngredient, editIngredient,
+                  deleteIngredient, saveRecipe }) => {
+  let containerClass = !openRecipe ? 'editor-bg-hidden' : 'editor-bg';
+  let editorClass = !openRecipe ? 'editor-container-hidden' : 'editor-container';
+  
+  return (
+    <div className={"full-screen-container " + containerClass}>
+      <div className={editorClass}>
+        <div className="exit-btn-container">
+          <i className="fa fa-times exit-btn-icon"
+             onClick={ev => { ev.preventDefault(); closeWindow(); }} />
+        </div>
+        <div className="editor-title center-text">
+          <i className="fa fa-pencil-square-o" />{' Edit Recipe'}
+        </div>
+        <div className="editor-section-title">
+          {'Recipe Name:'}
+        </div>
+        <div className="name-input-container">
+          <input className="name-input"
+                 value={openRecipe ? openRecipe.name : null}
+                 onChange={ev => { ev.preventDefault(); editName(ev.target.value); }} />
+        </div>
+        <div className="editor-section-title">
+          {openRecipe && openRecipe.ingredients.length ? 'Ingredients:' : ''}
+        </div>
+        {!openRecipe ? null: openRecipe.ingredients.map((ingredient, index) => (
+          <Ingredient index={index}
+                      ingredient={ingredient}
+                      deleteIngredient={deleteIngredient} />
+        ))}
+        <div className="editor-section-title">
+          {'Add Ingredient:'}
+        </div>
+        <div className="add-ingredient-container">
+          <i className="fa fa-plus add-icon"
+              onClick={ev => { ev.preventDefault(); addIngredient(); }}/>
+          <input className="add-ingredient-input"
+                 value={ !openRecipe ? null : openRecipe.newIngredient}
+                 onChange={ev => { ev.preventDefault(); editIngredient(ev.target.value) }} />
+        </div>
+        <button className="btn save-recipe-btn"
+                disabled={openRecipe ? !openRecipe.ingredients.length || !openRecipe.name.length : true}
+                onClick={ev => {
+                  ev.preventDefault();
+                  saveRecipe({ name: openRecipe.name, ingredients: openRecipe.ingredients });
+                  closeWindow();
+                }}>
+          <i className="fa fa-floppy-o"/>{' Save Recipe'}
+        </button>
+      </div>
+    </div>
+   );
+};
+
+// Containers
+
+const mapRecipesStateTopProps = (state, ownProps) => ({
+  visibleRecipes: state.visibleRecipes,
+  recipes: state.recipes
+});
+const mapDispatchToRecipes = (dispatch, ownProps) => ({
+  toggle: (recipe) => dispatch(toggleRecipeVisibility(recipe)),
+  openRecipe: (recipe) => dispatch(openRecipeForEdit(recipe)),
+  deleteRecipe: (index) => dispatch(deleteRecipe(index)),
+  openNewRecipe: () => dispatch(openNewRecipe()),
+  removeVisibility: (name) => dispatch(removeVisibility(name))
+});
+const RecipesDisplay = ReactRedux.connect( mapRecipesStateTopProps,
+                                           mapDispatchToRecipes )(Recipes);
+
+const mapEditorStateToProps = (state, ownProps) => ({ openRecipe: state.openRecipe });
+const mapDispatchToEditor = (dispatch, ownProps) => ({
+  closeWindow: () => dispatch(closeEditWindow()),
+  editName: (name) => dispatch(editName(name)),
+  addIngredient: () => dispatch(addIngredient()),
+  editIngredient: (ingredient) => dispatch(editIngredient(ingredient)),
+  deleteIngredient: (index) => dispatch(deleteIngredient(index)),
+  saveRecipe: (recipe) => dispatch(saveRecipe(recipe))
+});
+const RecipeEditor = ReactRedux.connect( mapEditorStateToProps,
+                                         mapDispatchToEditor )(Editor);
+
+// Main app
+
+const App = () => (
+  <div className="full-screen-container">
+    <RecipesDisplay />
+    <div className="center-text signature">
+      {'Made with '}<i className="fa fa-heart" />{' by Dylan Cutler'}
+    </div>
+    <RecipeEditor />
+  </div>
+);
+
+// Main render call
+
+function renderApp() {
+  ReactDOM.render( <ReactRedux.Provider store={store}>
+                     <App />
+                   </ ReactRedux.Provider>,
+                   document.getElementById('root') )
+}
+window.onresize = renderApp;
+window.onorientationchange = renderApp;
+renderApp();
